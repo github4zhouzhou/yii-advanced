@@ -1,0 +1,66 @@
+<?php
+
+use yii\db\Migration;
+
+/**
+ * Handles the creation of table `v_test`.
+ */
+class m180713_024048_create_v_test_table extends Migration
+{
+    /**
+     * {@inheritdoc}
+     */
+    public function safeUp()
+    {
+        $db = $this->db->createCommand()->createTable('mt4_trade_record', [
+            'id' => $this->primaryKey(),
+            'type' => $this->smallInteger(6)->notNull()->defaultValue(0)->comment('订单类型，三位数，十位：订单类型；百位：操作类型；个位：补充类型；'),
+            'order' => $this->integer(11)->notNull()->defaultValue(0)->comment('订单号'),
+            'login' => $this->integer(11)->defaultValue(0)->comment('mt4用户id'),
+            'symbol' => $this->string(32)->defaultValue('')->comment('交易品种'),
+            'cmd' => $this->smallInteger(4)->notNull()->comment('交易类型'),
+            'volume' => $this->smallInteger(6)->notNull()->defaultValue(0)->comment('交易手数'),
+            'open_time' => $this->integer(11)->notNull()->comment('建仓时间'),
+            'close_time' => $this->integer(11)->notNull()->comment('平仓时间'),
+            'state' => $this->smallInteger(4)->notNull()->comment(''),
+            'open_price' => $this->decimal(15, 6)->notNull()->comment('建仓价'),
+            'close_price' => $this->decimal(15,6)->notNull()
+
+
+        ]);
+
+
+//  `state` tinyint(4) NOT NULL,
+//  `open_price` decimal(15,6) NOT NULL COMMENT '建仓价',
+//  `close_price` decimal(15,6) NOT NULL COMMENT '平仓价',
+//  `sl` decimal(15,6) NOT NULL COMMENT '止损',
+//  `tp` decimal(15,6) NOT NULL COMMENT '止盈',
+//  `expiration` int(11) NOT NULL DEFAULT '0' COMMENT '过期时间',
+//  `storage` decimal(10,4) NOT NULL COMMENT '库存费',
+//  `storage_today` decimal(10,4) NOT NULL DEFAULT '0.0000',
+//  `profit` decimal(15,4) NOT NULL DEFAULT '0.0000' COMMENT '收益',
+//  `commission` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '手续费',
+//  `timestamp` int(11) NOT NULL COMMENT '订单时间',
+//  `comment` varchar(32) DEFAULT '' COMMENT '注释',
+//  `star_order` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '跟单的明星订单',
+//  `star_commission_amount` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '明星提成金额',
+//  `created_at` int(12) NOT NULL COMMENT '数据创建时间',
+//  `updated_at` int(12) NOT NULL COMMENT '数据更新时间',
+//  `trade_server` int(11) NOT NULL DEFAULT '0' COMMENT '交易服务器',
+//  `star_trade_server` int(11) NOT NULL DEFAULT '0' COMMENT '明星交易服务器',
+//  PRIMARY KEY (`id`),
+//  UNIQUE KEY `idx_ottt` (`order`,`timestamp`,`type`,`trade_server`)
+//) ENGINE=InnoDB AUTO_INCREMENT=3022726 DEFAULT CHARSET=utf8;
+
+        // 替换一下原始的 sql 语句，加上 IF NOT EXISTS
+        $db->setRawSql(str_replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS', $db->getRawSql()))->execute();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function safeDown()
+    {
+        $this->dropTable('mt4_trade_record');
+    }
+}
