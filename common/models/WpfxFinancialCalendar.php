@@ -3,13 +3,14 @@
 namespace common\models;
 
 use Yii;
+use yii\base\InvalidConfigException;
 
 /**
  * This is the model class for table "wpfx_financial_calendar".
  *
  * @property int $id
  * @property string $title 标题
- * @property int $event_id 事件ID
+ * @property string $event_id 事件ID
  * @property string $data_tag 数据标签，未知
  * @property string $country 国家
  * @property string $country_code 国家简写
@@ -21,7 +22,7 @@ use Yii;
  * @property string $previous 前值
  * @property string $revised 修正值
  * @property int $timestamp 时间戳
- * @property int $meta_id 媒体ID,未知用途
+ * @property string $meta_id 媒体ID,未知用途
  * @property int $platform_source 平台源，具体数值代表啥还不清楚
  * @property string $third_id 第三方平台的ID,记录从哪里扒的数据
  * @property int $type 类型，分类规则也不清楚
@@ -47,6 +48,14 @@ class WpfxFinancialCalendar extends \yii\db\ActiveRecord
         return 'wpfx_financial_calendar';
     }
 
+    public static function getDb()
+    {
+        try {
+            return Yii::$app->get('db');
+        } catch (InvalidConfigException $e) {
+        }
+    }
+
     /**
      * @inheritdoc
      */
@@ -54,10 +63,10 @@ class WpfxFinancialCalendar extends \yii\db\ActiveRecord
     {
         return [
             [['title', 'event_id', 'timestamp'], 'required'],
-            [['event_id', 'important', 'timestamp', 'meta_id', 'platform_source', 'type', 'created_at', 'updated_at'], 'integer'],
+            [['important', 'timestamp', 'platform_source', 'type', 'created_at', 'updated_at'], 'integer'],
             [['content', 'custom'], 'string'],
             [['title'], 'string', 'max' => 255],
-            [['data_tag', 'third_id'], 'string', 'max' => 128],
+            [['data_tag', 'third_id', 'event_id', 'meta_id'], 'string', 'max' => 128],
             [['country', 'effect_rule', 'effect'], 'string', 'max' => 32],
             [['country_code', 'lang', 'actual', 'forecast', 'previous', 'revised'], 'string', 'max' => 16],
             [['currency'], 'string', 'max' => 8],

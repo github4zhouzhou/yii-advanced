@@ -25,7 +25,8 @@
         "kartik-v/yii2-grid": "*",
         "kartik-v/yii2-detail-view": "*",
         "kartik-v/yii2-tabs-x": "*",
-        "kartik-v/yii2-widgets": "*"
+        "kartik-v/yii2-widgets": "*",
+        "shark/simple_html_dom": "@dev"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",

@@ -19,7 +19,13 @@ use yii\base\Controller;
 class TestController extends Controller
 {
     public function actionIndex() {
-        $this->sendSmsForXAUUSD();
+        //$r = strtotime('20180716 08:07:48') . ',' . strtotime('2018-07-16T08:07:48.03Z');
+        //$r = strtotime('20180716 08:07:48') - strtotime('2018-07-16T08:07:48.03Z');
+//        $str = 'GetHistory([{afdfjkdjfkdjfkdjkfjdkfjdk}])';
+//        preg_match('/GetHistory\((.*)\)/', $str, $matches);
+//        var_dump($matches); die();
+
+        $this->test();
     }
 
     public function actionNew() {
@@ -32,7 +38,40 @@ class TestController extends Controller
     }
 
     public function test() {
-        $this->tradeAccount();
+        //return strtotime('2018-07-16T08:07:48.03Z');
+        $time = 4;
+        $oneDay = 86400;
+        $now = time();
+        $start_time = mktime(0,0,0,date("m",$now),date("d",$now),date("Y",$now));  //当天开始时间
+        $end_time = mktime(23,59,59,date("m",$now),date("d",$now),date("Y",$now)); //当天结束时间
+
+        var_dump(date('Y-m-d H:i:s', $start_time));
+        var_dump(date('Y-m-d H:i:s', $end_time));
+
+        if ($time == 1) { // 今天
+        } elseif ($time == 0) { // 昨天
+            $start_time = $start_time - $oneDay;
+            $end_time = $end_time - $oneDay;
+        } elseif ($time == 2) { // 明天
+            $start_time = $start_time + $oneDay;
+            $end_time = $end_time + $oneDay;
+        } elseif ($time == 3) { // 本周
+            $w = date('w', $now);
+            $w = ($w + 6) % 7; // [1,2,3,4,5,6,0] => [0,1,2,3,4,5,6]
+            $start_time = $start_time - ($oneDay * $w);
+            $end_time = $end_time + $oneDay * (6 - $w);
+        } elseif ($time == 4) { // 下周
+            $w = date('w', $now);
+            $w = ($w + 6) % 7; // [1,2,3,4,5,6,0] => [0,1,2,3,4,5,6]
+            $start_time = $start_time + (7 - $w) * $oneDay;
+            //$end_time = $end_time - ($oneDay * ($w+7)) + ($oneDay * 6);
+            $end_time = $end_time + $oneDay * (13 - $w);
+        }
+
+        var_dump(date('Y-m-d H:i:s', $start_time));
+        var_dump(date('Y-m-d H:i:s', $end_time));
+
+        die();
     }
 
     public function sendSmsForXAUUSD()
@@ -170,6 +209,10 @@ class TestController extends Controller
         //var_dump($phones);
         die();
 
+    }
+
+    public function actionCalendarList() {
+        return 'ok';
     }
 
     // flash?pageSize=10&pageNum=1&lang=zh_CN

@@ -8,7 +8,8 @@ use Yii;
  * This is the model class for table "wpfx_fc_history".
  *
  * @property int $id
- * @property int $event_id 事件ID
+ * @property string $event_id 事件ID
+ * @property string $source 事件ID
  * @property string $data json数据
  * @property int $created_at 创建时间
  * @property int $updated_at 更新时间
@@ -30,8 +31,8 @@ class WpfxFcHistory extends \yii\db\ActiveRecord
     {
         return [
             [['event_id'], 'required'],
-            [['event_id', 'created_at', 'updated_at'], 'integer'],
-            [['data'], 'string'],
+            [['created_at', 'updated_at'], 'integer'],
+            [['data', 'event_id', 'source'], 'string'],
         ];
     }
 
