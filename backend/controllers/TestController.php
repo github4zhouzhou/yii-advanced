@@ -77,7 +77,6 @@ class TestController extends Controller
     public function sendSmsForXAUUSD()
     {
         $str = '"潘作伟",+8615050206855
-"颜辉",+8618500265602
 "杨林",+8613405102969
 "吴燕辉",+8615250221099
 "颜芳",+8613451753157
