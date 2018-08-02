@@ -37,6 +37,10 @@ class TestController extends Controller
         }
     }
 
+    private function git() {
+        return 'a';
+    }
+
     public function test() {
         //return strtotime('2018-07-16T08:07:48.03Z');
         $time = 4;
