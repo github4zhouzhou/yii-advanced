@@ -38,7 +38,7 @@ class TestController extends Controller
     }
 
     private function git() {
-        return 'abcdef';
+        return 'abcdefh';
     }
 
     public function test() {
