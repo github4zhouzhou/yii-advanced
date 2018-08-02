@@ -16,6 +16,11 @@ use common\models\WpfxNewsFlash;
 use Yii;
 use yii\base\Controller;
 
+/*
+ *               (dev) /--j-------l--\
+ * a-----c----e--f----h-----k--m-----n (master)
+ * \--b-----d---/\--g---i-----/(test)
+ */
 class TestController extends Controller
 {
     public function actionIndex() {
