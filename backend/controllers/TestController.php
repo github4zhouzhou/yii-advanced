@@ -20,6 +20,17 @@ use yii\base\Controller;
  *               (dev) /--j-------l--\
  * a-----c----e--f----h-----k--m-----n (master)
  * \--b-----d---/\--g---i-----/(test)
+ *
+ * reset 后的操作
+ * master a
+ * test b
+ * master c
+ * test d
+ * master e
+ * checkout test
+ * merge master f
+ * checkout master
+ * merge test
  */
 class TestController extends Controller
 {
