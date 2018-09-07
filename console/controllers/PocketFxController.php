@@ -376,7 +376,120 @@ class PocketFxController extends Controller
         $this->parseSinaCalendar($url, $params, $countries, 1);
     }
 
+    public function actionSinaCalendarTest() {
+        $now = time();
+        $oneDay = 86400;
+        $now = $now - 190 * $oneDay;
+
+
+        $countyStr = Yii::$app->params['country.info'];
+        $countryArray = json_decode($countyStr, true);
+        $countries = [];
+        foreach ($countryArray as $key => $county) {
+            $countryCode = $county['name'];
+            $county['code'] = $key;
+            $countries[$countryCode] = $county;
+        }
+
+        $result = [];
+        $url = 'https://rl.cj.sina.com.cn/client/api/calendar_v2/get_economic_lists';
+        for ($i = 0; $i < 200; $i++) {
+            $params = [
+                'start_time' => date('Y-m-d', $now + ($i * $oneDay)),
+                'end_time' => date('Y-m-d', $now + ($i * $oneDay)),
+                'page' => 1,
+                'version' => '4.3.2'
+            ];
+
+            $data = $this->parseSinaCalendar($url, $params, $countries, 1);
+            if ($data) {
+                foreach ($data as $key => $value) {
+                    $result[$key] = $value;
+                }
+            }
+
+        }
+        $this->stdout('country:'.json_encode($result,JSON_UNESCAPED_UNICODE).PHP_EOL);
+    }
+
     private function parseSinaCalendar($url, $params, $countries, $type) {
+        // 新浪财经日历数据有时会没有country_info，需要根据中文的country做一次转换
+        $countryChina = [
+            '新西兰' => 'New Zealand',
+            '日本' => 'Japan',
+            '法国' => 'France',
+            '加拿大' => 'Canada',
+            '韩国' => 'Korea, Republic of',
+            '澳大利亚' => 'Australia',
+            '中国' => 'China',
+            '德国' => 'Germany',
+            '瑞士' => 'Switzerland',
+            '英国' => 'United Kingdom',
+            '欧元区' => 'EUA',
+            '美国' => 'United States',
+            '意大利' => 'Italy',
+            '中国香港' => 'Hong Kong',
+            '俄罗斯' => 'Russian',
+            '中国台湾' => 'Taiwan, Province of China',
+            '西班牙' => 'Spain',
+            '新加坡' => 'Singapore',
+            '希腊' => 'Greece',
+            '印度' => 'India',
+            '南非' => 'South Africa',
+            '挪威' => 'Norway',
+            '巴西' => 'Brazil',
+            '波兰' => 'Poland',
+            '马来西亚' => 'Malaysia',
+            '瑞典' => 'Sweden',
+            '土耳其' => 'Turkey',
+        ];
+
+        $result = $this->dataCurl($url, $params);
+        $list = json_decode($result, true);
+
+        $parseResult = false;
+        if (isset($list['result']) && isset($list['result']['status'])) {
+            if ($list['result']['status']['msg'] == 'succ') {
+                $parseResult = true;
+            }
+        }
+
+        if (!$parseResult) {
+            $this->stdout('sina calendar:'.',time:'.date('Y-m-d H:i:s', time()).',parse result false'.PHP_EOL);
+            return;
+        }
+
+        $data = $list['result']['data'];
+        if ($data['total_num'] <= 0) {
+            var_dump('total_num = 0');
+            return;
+        }
+        $dataList = $data['data'];
+        $this->stdout('sina calendar,'.',time:'.date('Y-m-d H:i:s', time()).',list count:'.count($dataList).PHP_EOL);
+
+        $result = [];
+        foreach ($dataList as $item) {
+            $data = $item;
+            if (isset($data['country_info'])) {
+                $countryInfo = $data['country_info'];
+                $country = $countryInfo['name'];
+                if (isset($countries[$country])) {
+                    $result[$country] = $countries[$country]['currency'];
+                }
+            } else {
+                if (isset($data['country'])) {
+                    $country = $countryChina[$data['country']];
+                    if (isset($countries[$country])) {
+                        $result[$country] = $countries[$country]['currency'];
+                    }
+                }
+            }
+
+        }
+        return $result;
+    }
+
+    private function parseSinaCalendarOld($url, $params, $countries, $type) {
         $result = $this->dataCurl($url, $params);
         $list = json_decode($result, true);
 
@@ -572,7 +685,55 @@ class PocketFxController extends Controller
         }
     }
 
-    public function actionStrategy() {
+    public function actionStrategy($en = 0) {
+        $symbolKeys = [
+            'AUDUSD' => '01de5d2c3b9b1ff6aa50ac3c2337064e',
+            'AUDCAD' => 'eee470fd00fae2fdf1c8135c376b384b',
+            'AUDJPY' => '45fab9871942ea477bb0e11615bdf4b6',
+            'AUDCHF' => 'edb204db5f56b3c8cb5f76671de67d6d',
+            'AUDNZD' => '6475e4ea9353d7b37506182da811ffc3',
+            'CADJPY' => '786f97b5818f9c79fe74d9c5fedeeb5b',
+            'CADCHF' => '80763a6e9b9e644af44700bb37380700',
+            'USDCAD' => '1f0cd9ce3ce989fd8e73e4d79e484e8f',
+            'USDCNH' => 'faadc8a5b63ac55851d7cfeb7828cd6f',
+            'USDJPY' => 'eec5396b2eca3cdd49c4c53a9f0b205e',
+            'USDCHF' => 'cede9fd1d6f61bb6c205f96c9773473e',
+            'EURAUD' => '1261a69cb3944b130b2e25af33ebc609',
+            'EURCAD' => '0a8a1c21c6618d540870777cff1f50d0',
+            'EURUSD' => '7945652a70e9b13d7ba6c2c521ab58a7',
+            'EURJPY' => 'eca2ac0b96575fa0bc5f4587ce5601b2',
+            'EURCHF' => '567276ac6fed19b356af22adcf25b1dd',
+            'EURNZD' => '029d98fc06b7efd5cc16d5769c0f21ed',
+            'EURGBP' => '10f560bebddcc14405c0b36efed54ffb',
+            'CHFJPY' => 'dfa04e1fcf0ee06854230d0dd8d37a46',
+            'NZDCAD' => 'fb84c77f259b8a6305ffb8ebc670857d',
+            'NZDUSD' => '18ebb56c5e16121f3c1e3c48dfdb9edf',
+            'NZDJPY' => '13200adf628f74182f3c29794e7fcd77',
+            'NZDCHF' => '25d866499bda7bf501062ec7d4b227f2',
+            'GBPAUD' => 'fcbe018a14817ad0df816f28a855093f',
+            'GBPCAD' => '9526d944037c1dee899be93f798fda61',
+            'GBPUSD' => '23ca99be483960394a03c1c2be30d102',
+            'GBPJPY' => '01a153b9583a1732613c1f0e31cac483',
+            'GBPCHF' => '257e95b0a47c8eb26891a32848c6a074',
+            'GBPNZD' => '1476df9bee71ee22dad768d2c72c4301',
+
+            'XAGUSD' => 'f2715ca65b788bb1a923c4eaa4052ff6',
+            'XAUUSD' => '6cadc517fc27792c00eec6666c0f75d5',
+            'XBRUSD' => 'ee8c12351b91f4c8bcd6d57d8bb9df40',
+            'XNGUSD' => '0e048a0e1d67eee0c244e2317741ddff',
+            'XTIUSD' => 'c384821af9492119d785ebf29735ac87',
+
+            'USA500' => '5c5627bbc1aab43e4ff625a43e15194b',
+            'US30' => '50d8ec2a9db0055a020692218e0c338d',
+            'GER30' => 'cdf26e0fbf97d27e07f010e9f54b3141',
+            'HK50' => '4c7e03d40b0441025bcecde14e19e1c8',
+            'NAS100' => 'd3877d7a2ae7920d5061778157c96ea2',
+            'EUSTX50' => 'b0c4585d068ddd9f09e2a54b50fa8c56',
+            'JPN225' => '5c4b361dbda69e26c4b663e0cd4b15c9',
+
+        ];
+
+        // https://api.wattforex.com/app/v1/strategy/getDetail?auth_sign_version=1.0&auth_consumer_key=ios_jH0c4aDCmyJ8FQaZSILTJRN3EJ5E&symbol=USDCNH&auth_sign=faadc8a5b63ac55851d7cfeb7828cd6f&brokerCode=TIGER_WIT&auth_sign_type=MD5
         $url = 'https://api.wattforex.com/app/v1/strategy/getDetail';
         $params = [
             'auth_sign_version' => '1.0',
@@ -582,6 +743,36 @@ class PocketFxController extends Controller
             'brokerCode' => 'TIGER_WIT',
             'auth_sign_type' => 'MD5'
         ];
+
+        foreach ($symbolKeys as $symbol => $md5) {
+            $params['symbol'] = $symbol;
+            $params['auth_sign'] = $md5;
+
+            if (empty($en)) {
+                $result = $this->dataCurl($url, $params);
+            } else {
+                $headers = array(
+                    'lang:' . 'en_US',
+                );
+                $result = $this->dataCurl($url, $params, 0, $headers);
+                //$result = $this->http_get($url . '?' . http_build_query($params));
+            }
+
+
+            $data = json_decode($result, true);
+
+
+            if (isset($data['result'])) {
+                if (isset($data['result']['symbol'])) {
+                    print_r($data);
+                }
+            } else {
+                print_r($data);
+            }
+
+            break;
+
+        }
     }
 
     public function actionFx168() {
@@ -707,18 +898,23 @@ class PocketFxController extends Controller
      * @param int $ispost 是否以POST提交，默认GET
      * @return bool|mixed 返回JSON数据
      */
-    private function dataCurl($url, $params = false, $ispost = 0)
+
+    private function dataCurl($url, $params = false, $ispost = 0, $headers = [])
     {
-        $httpInfo = array();
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
-        //curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.172 Safari/537.22');
+        curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // http://stackoverflow.com/questions/4372710/php-curl-https
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+        if (!empty($headers)) {
+            print_r($headers);
+            curl_setopt($ch,CURLOPT_HTTPHEADER, $headers);
+        }
+
         if ($ispost) {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
@@ -726,9 +922,8 @@ class PocketFxController extends Controller
         } else {
             if ($params) {
                 if (is_array($params)) {
-                    $tmpUrl = $url . '?' . http_build_query($params);
-                    var_dump($tmpUrl);
-                    curl_setopt($ch, CURLOPT_URL, $tmpUrl);
+                    print_r($params);
+                    curl_setopt($ch, CURLOPT_URL, $url . '?' . http_build_query($params));
                 } else {
                     curl_setopt($ch, CURLOPT_URL, $url . '?' . $params);
                 }
@@ -745,6 +940,33 @@ class PocketFxController extends Controller
         //$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         //$httpInfo = array_merge($httpInfo, curl_getinfo($ch));
         curl_close($ch);
+        return $response;
+    }
+
+    private static function http_get($url) {
+        $ch = curl_init();
+
+        $headers = array(
+            //'Cache-Control:' . 'no-cache',
+            //'Content-Type:' . 'application/json',
+            //'Content-Type:' . 'application/x-www-form-urlencoded',
+            //'Client-lang:' . "en_US",
+            'lang:' . 'en_US',
+        );
+
+        curl_setopt_array($ch, array(
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1
+        ));
+
+        $response = curl_exec($ch);
+
+        curl_close($ch);
+
+        Yii::info('http response:'. $response, __METHOD__);
+
         return $response;
     }
 }

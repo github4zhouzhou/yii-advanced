@@ -26,7 +26,8 @@
         "kartik-v/yii2-detail-view": "*",
         "kartik-v/yii2-tabs-x": "*",
         "kartik-v/yii2-widgets": "*",
-        "shark/simple_html_dom": "@dev"
+        "shark/simple_html_dom": "@dev",
+        "paquettg/php-html-parser": "^1.7"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",

@@ -10,9 +10,11 @@ namespace backend\controllers;
 
 use common\models\TradeAccount;
 use common\behaviors\MyBehavior;
+use common\models\WpfxDynamicNews;
 use common\models\WpfxFcHistory;
 use common\models\WpfxFinancialCalendar;
 use common\models\WpfxNewsFlash;
+use PHPHtmlParser\Dom;
 use Yii;
 use yii\base\Controller;
 
@@ -35,13 +37,61 @@ use yii\base\Controller;
 class TestController extends Controller
 {
     public function actionIndex() {
-        //$r = strtotime('20180716 08:07:48') . ',' . strtotime('2018-07-16T08:07:48.03Z');
-        //$r = strtotime('20180716 08:07:48') - strtotime('2018-07-16T08:07:48.03Z');
-//        $str = 'GetHistory([{afdfjkdjfkdjfkdjkfjdkfjdk}])';
-//        preg_match('/GetHistory\((.*)\)/', $str, $matches);
-//        var_dump($matches); die();
+        return $this->render('index');
+    }
 
-        $this->test();
+    public function actionN() {
+        $data = WpfxDynamicNews::findOne(['source' => 'Fx168']);
+
+        $dom = new Dom();
+        $dom->load($data->content);
+        $h1 = $dom->find('h1')[0];
+        $h1->delete();
+        $dom->removeSelfClosingTag();
+        var_dump($dom->__toString()); die();
+
+        preg_match('/\<h1\>.*?\<\/h1\>/', $data->content, $matches);
+        $ok = str_replace($matches[0], '', $data->content);
+        preg_match('/\<h3\>.*?\<\/h3\>/', $ok, $matches);
+        $ok = str_replace($matches[0], '', $ok);
+
+
+        var_dump($ok);
+    }
+
+    public static function makeSource($url_path, $params)
+    {
+        // https://report.ubfx.co.uk/order/file?order=2478407&sign=Y36HLMyH9Sk1ChsLz3oaMiSmGb8%3D&time=1535437641&server=1
+        $strs = rawurlencode($url_path .'&');
+
+        ksort($params);
+        $query_string = array();
+        foreach ($params as $key => $val )
+        {
+            array_push($query_string, $key . '=' . $val);
+        }
+        $query_string = join('&', $query_string);
+
+        return $strs . rawurlencode($query_string);
+    }
+
+    public static function makeCosSig($url_path, $params, $secret)
+    {
+        $mk = self::makeSource($url_path, $params);
+        $my_sign = hash_hmac("sha1", $mk, strtr($secret, '-_', '+/'), true);
+        $my_sign = base64_encode($my_sign);
+
+        return $my_sign;
+    }
+
+    public function actionBank() {
+        $this->layout = false;
+        return $this->render('bank', [
+            'order_id' => 'J859PPM2EWJK5BVL',
+            'product' => '中国特种部队',
+            'order_time' => date('Y-m-d', time()),
+            'amount' => '659.00',
+        ]);
     }
 
     public function actionNew() {
@@ -58,176 +108,17 @@ class TestController extends Controller
     }
 
     public function test() {
-        //return strtotime('2018-07-16T08:07:48.03Z');
-        $time = 4;
-        $oneDay = 86400;
-        $now = time();
-        $start_time = mktime(0,0,0,date("m",$now),date("d",$now),date("Y",$now));  //当天开始时间
-        $end_time = mktime(23,59,59,date("m",$now),date("d",$now),date("Y",$now)); //当天结束时间
-
-        var_dump(date('Y-m-d H:i:s', $start_time));
-        var_dump(date('Y-m-d H:i:s', $end_time));
-
-        if ($time == 1) { // 今天
-        } elseif ($time == 0) { // 昨天
-            $start_time = $start_time - $oneDay;
-            $end_time = $end_time - $oneDay;
-        } elseif ($time == 2) { // 明天
-            $start_time = $start_time + $oneDay;
-            $end_time = $end_time + $oneDay;
-        } elseif ($time == 3) { // 本周
-            $w = date('w', $now);
-            $w = ($w + 6) % 7; // [1,2,3,4,5,6,0] => [0,1,2,3,4,5,6]
-            $start_time = $start_time - ($oneDay * $w);
-            $end_time = $end_time + $oneDay * (6 - $w);
-        } elseif ($time == 4) { // 下周
-            $w = date('w', $now);
-            $w = ($w + 6) % 7; // [1,2,3,4,5,6,0] => [0,1,2,3,4,5,6]
-            $start_time = $start_time + (7 - $w) * $oneDay;
-            //$end_time = $end_time - ($oneDay * ($w+7)) + ($oneDay * 6);
-            $end_time = $end_time + $oneDay * (13 - $w);
-        }
-
-        var_dump(date('Y-m-d H:i:s', $start_time));
-        var_dump(date('Y-m-d H:i:s', $end_time));
-
-        die();
-    }
-
-    public function sendSmsForXAUUSD()
-    {
-        $str = '"潘作伟",+8615050206855
-"杨林",+8613405102969
-"吴燕辉",+8615250221099
-"颜芳",+8613451753157
-"销售账号",+8613800138309
-"跟单者5",+8613800138313
-"跟单者7",+8613800138314
-"高翠红",+8613671759649
-"毛肜絮",+8615000000070
-"周慧娟",+8613366634912
-"郭星",+8615149828586
-"于迪",+8613889895823
-"明星账户1",+8618000000009
-"明星账户2",+8618000000008
-"熊梅",+8613466602067
-"贾会娟",+8618101216639
-"陈汉图",+8613267686141
-"郭志",+8613888831617
-"肇博",+8618640042707
-"郭文",+8613062828750
-"宛辉",+8613080864113
-"何英辉",+8615710500111
-"测试",+8613900139564
-"朱晓晔",+8613918121410
-"李春香",+8618511977839
-"严大兴",+8618856933145
-"付细香",+8615962401830
-"颜友云",+8613087377264
-"刘文翔",+8618763600526
-"王其总",+8613567612709
-"朱祥信",+8615960818221
-"于家鹏",+8615840243542
-"马城镇",+8618741007866
-"柳海峰",+8615904510734
-"杨文",+8615640545383
-"张媛",+8615909524166
-"089",+8615000000089
-"纪振华",+8618351683810
-"卢博",+8615204053118
-"孙永刚",+8615940328521
-"李玉玲",+8613820408577
-"沈晓冬",+8615811568066
-"陆毓龙",+8615940098044
-"聂鹏飞",+8613180691333
-"于洋",+8613332450702
-"郭海波",+8615041231957
-"黄文强",+8618081046852
-"高翡",+8618292462738
-"白亚辉",+8613904895152
-"李东东",+8618781741600
-"侯仰强",+8613071927559
-"王九峰",+8613784942936
-"韩翠海",+8613864892119
-"夏依林",+8618721995137
-"房玉梅",+8613941953700
-"邢振武",+8613947981279
-"周文奇",+8618551218448
-"杨勇",+8613604908539
-"邹玲玲",+8618246495113
-"李娟娟",+8615246656923
-"温丽雅",+8613821563593
-"刘剑",+8617610401985
-"李金波",+8613103722736
-"侯国伟",+8613963819032
-"常涛",+8615001031287
-"李粉芳",+8618849008498
-"佟延昭",+8615040246967
-"王硕",+8615246807675
-"程建法",+8613085881716
-"张加微",+8615636336785
-"林聪智",+8615678500504
-"沈澍",+8615602115978
-"周华建",+8617671725356
-"于俪源",+8613166615755
-"侯长皓",+8617640121122
-"宋广滨",+8613898842777
-"高梓淇",+8618524495878
-"王娜",+8613386823895
-"韩云利",+8613940145089
-"王晓丹",+8615808963718
-"杨京哲",+8615942059293
-"李晓波",+8613166611553
-"兰昊",+8613136003400
-"陈健强",+8613602749432
-"赵芯悦",+8615524128710
-"王矜栋",+8618610738713
-"巩晓丹",+8613188330002
-"杨薇",+8613694180321
-"戴波涛",+8615802498938
-"李强",+8613358985980
-"汤波",+8618640518601
-"薛金凤",+8613125413946
-"倪隽",+8615840587587
-"肇舰",+8613591541976
-"杨晋霞",+8613753607488
-"葛茂祥",+8618602429999
-"史琴",+8613635309568
-"刘春林",+8617328578614
-"李欣",+8615040826868
-"李本龙",+8618613073146
-"陈海军",+8613757356506
-"胡永亮",+8613710533618
-"崔国栋",+8615593988882
-"周巍",+8618610032557';
-
-        $array = explode(',', $str);
-
-        $names = [];
-        $phones = [];
-        foreach ($array as $item) {
-            $result = preg_match('/(\".*\"$)/', $item, $matches);
-            if ($result) {
-                $names[] = $matches[1];
-            }
-            $result = preg_match('/(^\+\d+)/', $item, $matches);
-            if ($result) {
-                $phones[] = $matches[1];
-            }
-        }
-
-        $result = [];
-        for($i = 0; $i < count($names); $i++) {
-            $user = [];
-            $user['name'] = substr($names[$i], 1, strlen($names[$i])-2);
-            $user['phone'] = $phones[$i];
-            $result[] = $user;
-
-        }
-        var_dump($result);
-        //var_dump($phones);
-        die();
-
+        $url = 'https://report.ubfx.co.uk/order/file?order=2478407&sign=Y36HLMyH9Sk1ChsLz3oaMiSmGb8%3D&time=1535437641&server=1';
+        $url = 'https://report.ubfx.co.uk/order/file';
+        $params = [
+            'order' => '2478407',
+            'time' => '1535437641',
+            'server' => '1',
+        ];
+        // $result = self::makeSource($url, $params);
+        // https%3A%2F%2Freport.ubfx.co.uk%2Forder%2Ffile%26order%3D2478407%26server%3D1%26time%3D1535437641
+        $result = self::makeCosSig($url, $params, '123');
+        var_dump($result); die();
     }
 
     public function actionCalendarList() {
@@ -375,5 +266,77 @@ class TestController extends Controller
         print_r("\n");
         var_dump($account->products);
         print_r("\n");
+    }
+
+    /**
+     * @param string $data
+     * @return array|bool
+     */
+    private function recoverData($data)
+    {
+        // 异步
+//        [
+//            'Sign' => '64b62fa9cc515cb6243cab307376a05f1fac1e8b70cdddc22e4a1f278e66feb480df92ffe7c3f1b788be380ccfa7c12b5a1a5e12540f6b398bb29294bd17b98b',
+//            'Data' => 'cU%CLiczM@ITN@cTMggjMtgDMtgTM*IjI@ISZtlGVyVGZy9kIsISWONkI@ISej5WZy%XdD%XZk%3Ti*iI*AjUTV0wDV1UiojIzVHdhR3Ui*iIzE2YiZzM5wmMmdjNtYTMi%WLyETZ00yYmFGNtczM5UGOxkDOiojIv5UZkFmLxIiOiwnb19WbB%XZk%3Ti*iINhjM6%TUNxkM4ckNMVkVK%iOi,mTyVGZy9kIsISNE1kI@ISZ*lHVudW6T%yeyJ9',
+//        ]
+
+        // 同步
+//        [
+//            'Sign' => 'a9c531ef781b4b58ce2a41f39fe4883c910e67c1a48a2ad2a085783073dab39093aa24704f537d2dc509c0ac5a0662db2489a667b9b2867f88acfdf0a8300ac6',
+//            'Data' => 'gU2c1BCdv5GIvRkI@IyZz1EczVmUi*iIn5W6k5WZw%iOiMXd0FGdT%CLxojI05Wdv1WwyVGZy9kIsIST4IjWyEVTM%DOHZDTFZlSiojIv5kclRmcP%yeIucmbpN3clN2byBHIhRXYkBicvZGIzt2Yh%GbsF2YgMXdv52byh2Yul3cn0=',
+//        ],
+        if (!is_string($data)) return false;
+        $data_str = preg_replace('/\s/', '', $data);
+        if ($data_str != $data) return false;
+
+        $suffix = substr($data_str, strlen($data_str) - 3, 3);
+        $data_str = substr($data_str, 0, strlen($data_str) - 3);
+        // reverse
+        if (strlen($data_str) % 3 == 1) {
+            $substr_len = (int) floor(strlen($data_str) / 3);
+            $data_str_sub1 = substr($data_str, 0, $substr_len);
+            $data_str_sub2 = substr($data_str, $substr_len, $substr_len);
+            $data_str_sub3 = substr($data_str, $substr_len * 2, $substr_len + 1);
+            $data_str = $data_str_sub2 . $data_str_sub1 . $data_str_sub3;
+        }
+        else if (strlen($data_str) % 3 == 2) {
+            $substr_len = (int) floor(strlen($data_str) / 3);
+            $data_str_sub1 = substr($data_str, 0, $substr_len + 2);
+            $data_str_sub2 = substr($data_str, $substr_len + 2, $substr_len);
+            $data_str_sub3 = substr($data_str, $substr_len * 2 + 2, $substr_len);
+            $data_str = $data_str_sub3 . $data_str_sub1 . $data_str_sub2;
+        }
+        else {
+            $substr_len = (int) floor(strlen($data_str) / 3);
+            $data_str_sub1 = substr($data_str, 0, $substr_len);
+            $data_str_sub2 = substr($data_str, $substr_len, $substr_len);
+            $data_str_sub3 = substr($data_str, $substr_len * 2, $substr_len);
+            $data_str = $data_str_sub2 . $data_str_sub3 . $data_str_sub1;
+        }
+        $data_str = strrev($data_str);
+        // replace
+        $data_str = str_replace('6', 'a', $data_str);
+        $data_str = str_replace('w', 'Q', $data_str);
+        $data_str = str_replace('%', 'J', $data_str);
+        $data_str = str_replace('*', 'w', $data_str);
+        $data_str = str_replace('@', '6', $data_str);
+        $data_str = str_replace(',', '8', $data_str);
+
+        $data_str = $data_str . $suffix;
+        $data_str = base64_decode($data_str);
+
+        if (!$data_str) return false;
+        $data_array = json_decode($data_str, true);
+        if (!is_array($data_array)) return false;
+
+        return $data_array;
+    }
+
+    public function signParams($params) {
+        ksort($params);
+        $keys_str = implode('%#', array_keys($params));
+        $values_str = implode(array_values($params));
+        $str_to_sign = $keys_str . $values_str . '136ddeab162b23a810d8774088e1aa6baf880b65';
+        return hash_hmac('sha512', $str_to_sign, 'cEFGh71Mno6RsStTvw7z');
     }
 }
