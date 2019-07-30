@@ -4,6 +4,25 @@ namespace common\helpers;
 
 class Util
 {
+	// curlFile('http://dev.account.ubfx.com/bankinfo/upload', '/data/cdn/uploads/cert/5bd2dc9ea3860.jpg');
+	public function curlFile($url, $path)
+	{
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_SAFE_UPLOAD, true);
+
+		$data = array('file' => new \CURLFile(realpath($path)));
+
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, 1 );
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_USERAGENT,"TEST");
+		$result = curl_exec($curl);
+		$error = curl_error($curl);
+
+		return $result;
+	}
+
     // 获取IP
     public static function GetIP($format = 0)
     {

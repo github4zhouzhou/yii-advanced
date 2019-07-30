@@ -20,16 +20,9 @@ class PocketFxController extends Controller
     public static $calendar_history_url = 'http://news.wattforex.com/v1/getIndex';
     //public static $calendar_history_url = 'http://news.wattforex.com/v1/getIndex?id=';
 
-    public function actionTest() {
-        $countyStr = Yii::$app->params['country.info'];
-        $counties = json_decode($countyStr, true);
-        $result = [];
-        foreach ($counties as $key => $county) {
-            $countryCode = $county['name'];
-            $county['code'] = $key;
-            $result[$countryCode] = $county;
-        }
-        var_dump($result); die();
+	// /usr/bin/php /Users/zhouzhou/workspace/2018/advanced/yii pocket-fx/test
+    public function actionTest($id) {
+		return 'OK';
     }
 
     public function actionFlashAll() {
@@ -112,6 +105,40 @@ class PocketFxController extends Controller
             $this->parseFlash(self::$flash_list_url, $params);
         }
     }
+
+    public function actionJinFlash() {
+		$urls = ['https://sshibjmfbd.jin10.com:4432', 'https://sshibiddce.jin10.com:4431'];
+		$r = random_int(0, 1);
+
+		$params = [
+			'app' => 'IOS',
+			'method' => 'GetFlashListRequest',
+			'sessionId' => '',
+			'jsonStr' => [
+				'wheres' => ['MaxTime' => 0]
+			],
+			'limit' => '50',
+		];
+		$this->stdLog($urls[$r]);
+		$headers = array(
+			'Content-Type:' . 'application/json',
+//			'Content-Type:' . 'application/x-www-form-urlencoded',
+		);
+
+		$response = $this->dataCurl($urls[$r], json_encode($params), 1, $headers);
+		$list = json_decode($response, true);
+		if (!$list) {
+			$this->stdout('error flash result:'.$response.PHP_EOL);
+			return;
+		}
+
+		foreach ($list['data'] as $item) {
+			$this->stdLog($item['id']);
+			$this->stdLog($item['content']);
+			$this->stdLog($item['timestr']);
+			$this->stdLog(strtotime($item['timestr']));
+		}
+	}
 
     public function parseCalendar($url, $params) {
         $response = $this->dataCurl($url, $params);
@@ -909,7 +936,7 @@ class PocketFxController extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // http://stackoverflow.com/questions/4372710/php-curl-https
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
         if (!empty($headers)) {
             print_r($headers);
             curl_setopt($ch,CURLOPT_HTTPHEADER, $headers);
@@ -969,4 +996,8 @@ class PocketFxController extends Controller
 
         return $response;
     }
+
+	private function stdLog($msg) {
+		$this->stdout('time:' . date('Y-m-d H:i:s', time()) .'[' . $msg . ']' . PHP_EOL);
+	}
 }

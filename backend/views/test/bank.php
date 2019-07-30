@@ -92,6 +92,11 @@ use yii\web\View;
 </head>
 <body>
 
+<header>
+  <div class="wrap">
+    <img src="/pc/images/paymentwall/dlocal.png" style="height: 60px;" alt="logo">
+  </div>
+</header>
 <section class="w_section">
     <div class="w_top">
         <div style="display: flex; justify-content: flex-start;">

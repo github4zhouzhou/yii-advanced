@@ -8,15 +8,18 @@
 
 namespace backend\controllers;
 
+use common\helpers\Test;
 use common\models\TradeAccount;
 use common\behaviors\MyBehavior;
 use common\models\WpfxDynamicNews;
 use common\models\WpfxFcHistory;
 use common\models\WpfxFinancialCalendar;
 use common\models\WpfxNewsFlash;
+use mdm\admin\components\MenuHelper;
 use PHPHtmlParser\Dom;
 use Yii;
 use yii\base\Controller;
+use yii\base\Exception;
 
 /*
  *               (dev) /--j-------l--\
@@ -37,8 +40,109 @@ use yii\base\Controller;
 class TestController extends Controller
 {
     public function actionIndex() {
-        return $this->render('index');
+    	return $this->testTry();
     }
+
+    private function testTry() {
+		$i = 0;
+
+		Yii::error(__METHOD__, 'sa');
+		try {
+			$i= $i+1;
+			throw new Exception('OK');
+			return $i;
+		} catch (Exception $e) {
+			echo "wc";
+			throw $e;
+		} finally {
+			$i= $i+2;
+			print_r($i);
+//			return "1111";//当finally有return的时候 返回这个，当注销后，返回try 或者是 catch的内容。
+		}
+	}
+
+	private function RSA2EncryptByPub($strToSign, $key) {
+		return $this->curlPost('http://api.bejson.com/btools/tools/enc/rsa/buildRSAEncryptByPublicKey', $strToSign, $key);
+	}
+
+	private function RSA2DecryptByPri($data, $key) {
+		return $this->curlPost('http://api.bejson.com/btools/tools/enc/rsa/buildRSADecryptByPrivateKey', $data, $key);
+	}
+
+	private function curlPost($url, $param, $key) {
+		$headers = array('Content-Type: application/x-www-form-urlencoded');
+		$ch = curl_init(); // 启动一个CURL会话
+		curl_setopt($ch, CURLOPT_URL, $url); // 要访问的地址
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); // 对认证证书来源的检查
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); // 从证书中检查SSL加密算法是否存在
+		curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']); // 模拟用户使用的浏览器
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // 使用自动跳转
+		curl_setopt($ch, CURLOPT_AUTOREFERER, 1); // 自动设置Referer
+		curl_setopt($ch, CURLOPT_POST, 1); // 发送一个常规的Post请求
+		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+			'key' => $key,
+			'data' => $param,
+			'rsaType' => 'rsa2'
+		])); // Post提交的数据包
+		curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 设置超时限制防止死循环
+		curl_setopt($ch, CURLOPT_HEADER, 0); // 显示返回的Header区域内容
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); // 获取的信息以文件流的形式返回
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		$response = curl_exec($ch);
+		curl_close($ch);
+
+		Yii::error('RSA2Sign result:' . $response, __METHOD__);
+
+		$jData = json_decode($response, true);
+		if (isset($jData['code']) && $jData['code'] == 0) {
+			return $jData['message'];
+		}
+		return '';
+	}
+
+    public function actionTest() {
+        $this->andTest();
+    }
+
+    public function coinGatePay() {
+			$notify = [
+				'id' => '2229913',
+				'order_id' => 'RMGW2GJVL4VPG7XE',
+				'status' => 'paid',
+				'pay_amount' => '3.043782',
+				'pay_currency' => 'ETH',
+				'price_amount' => '609.0',
+				'price_currency' => 'USD',
+				'receive_currency' => 'ETH',
+				'receive_amount' => '3.013344',
+				'created_at' => '2018-10-15T13:02:04+00:00',
+				'token' => '5d2af99e0a847abe52a341cec1e05d50',
+			];
+
+			$request = [
+				'order_id' => 'RMGW2GJVL4VPG7XE',
+				'price_amount' => '609.00',
+				'price_currency' => 'USD',
+				'receive_currency' => 'DO_NOT_CONVERT',
+				'callback_url' => 'http://pay.ubfx.co.uk/coingate/notify',
+				'cancel_url' => 'http://pay.ubfx.co.uk/coingate/cancel?oid=RMGW2GJVL4VPG7XE',
+				'success_url' => 'http://pay.ubfx.co.uk/coingate/result?oid=RMGW2GJVL4VPG7XE',
+				'token' => '5d2af99e0a847abe52a341cec1e05d50',
+			];
+
+
+			$s1 = $this->signData($request);
+			$s2 = $this->signData($notify);
+			var_dump($s1 . $s2); die();
+
+
+		}
+
+	public function signData($params)
+	{
+		$strToSign = $params['order_id'] . intval($params['price_amount']) . $params['price_currency'] . 'coin-gate-ubfx';
+		return hash('md5', $strToSign);
+	}
 
     public function actionN() {
         $data = WpfxDynamicNews::findOne(['source' => 'Fx168']);
@@ -59,30 +163,70 @@ class TestController extends Controller
         var_dump($ok);
     }
 
-    public static function makeSource($url_path, $params)
-    {
-        // https://report.ubfx.co.uk/order/file?order=2478407&sign=Y36HLMyH9Sk1ChsLz3oaMiSmGb8%3D&time=1535437641&server=1
-        $strs = rawurlencode($url_path .'&');
+	public function actionRpn()
+	{
+		$data = [
+			'order_id' => '3V2Z37B8E4W4WK7Y',
+			'order_time' => '1551680286',
+			'order_amount' => '676',
+			'deal_id' => '123',
+			'deal_time' => '1551680287',
+			'pay_amount' => '677',
+			'pay_result' => '3',
+		];
+		$key = 'DKJkTQPE0YdAtJTOShRI2Q';
 
-        ksort($params);
-        $query_string = array();
-        foreach ($params as $key => $val )
-        {
-            array_push($query_string, $key . '=' . $val);
-        }
-        $query_string = join('&', $query_string);
+		$strToSign = 'order_id=' . $data['order_id']
+			. '|order_time=' . $data['order_time']
+			. '|order_amount=' . $data['order_amount']
+			. '|deal_id=' . $data['deal_id']
+			. '|deal_time=' . $data['deal_time']
+			. '|pay_amount=' . $data['pay_amount']
+			. '|pay_result=' . $data['pay_result']
+			. '|key=' . $key;
+		$sign = hash('md5', $strToSign);
 
-        return $strs . rawurlencode($query_string);
-    }
+		var_dump($sign);die();
 
-    public static function makeCosSig($url_path, $params, $secret)
-    {
-        $mk = self::makeSource($url_path, $params);
-        $my_sign = hash_hmac("sha1", $mk, strtr($secret, '-_', '+/'), true);
-        $my_sign = base64_encode($my_sign);
+		$this->layout = false;
+		return $this->render('rpn', [
+			'url' => 'http://www.baidu.com',
+			'order' => '12345678',
+			'btn_tip' => '複製並跳轉',
+		]);
+	}
 
-        return $my_sign;
-    }
+    public function actionRpnTest()
+	{
+		$mid = 'EU85201076P2P';
+		$uid = '11099';
+		$request_time = '1551680286';
+		$key = 'DKJkTQPE0YdAtJTOShRI2Q';
+
+		$strToSign = 'mid='. $mid . '|uid=' . $uid . '|request_time=' . $request_time . '|key=' . $key;
+		$sign = hash('md5', $strToSign);
+
+		var_dump($strToSign);die();
+		$this->layout = false;
+		return $this->render('rpn', [
+			'url' => 'http://www.baidu.com',
+			'order' => '12345678',
+			'btn_tip' => '複製並跳轉',
+		]);
+	}
+
+    public function actionRdp()
+	{
+		$this->layout = false;
+		return $this->render('rdp', [
+			'title' => '确认信息',
+			'pay_type' => '支付方式：网银支付',
+			'pay_amount' => '支付金额：$50',
+			'order_id' => 'J859PPM2EWJK5BVL',
+			'input_tip' => '请输入储蓄卡号',
+			'btn_tip' => '下一步',
+		]);
+	}
 
     public function actionBank() {
         $this->layout = false;
@@ -94,138 +238,18 @@ class TestController extends Controller
         ]);
     }
 
-    public function actionNew() {
-        $a = [];
-        if (empty($a)) {
-            echo 'a';
-        } else {
-            echo 'new';
-        }
-    }
-
-    private function git() {
-        return 'abcde';
-    }
-
-    public function test() {
-        $url = 'https://report.ubfx.co.uk/order/file?order=2478407&sign=Y36HLMyH9Sk1ChsLz3oaMiSmGb8%3D&time=1535437641&server=1';
-        $url = 'https://report.ubfx.co.uk/order/file';
-        $params = [
-            'order' => '2478407',
-            'time' => '1535437641',
-            'server' => '1',
-        ];
-        // $result = self::makeSource($url, $params);
-        // https%3A%2F%2Freport.ubfx.co.uk%2Forder%2Ffile%26order%3D2478407%26server%3D1%26time%3D1535437641
-        $result = self::makeCosSig($url, $params, '123');
-        var_dump($result); die();
-    }
+    public function actionDLocal() {
+		$this->layout = false;
+		return $this->render('d-local', [
+			'order_id' => 'J859PPM2EWJK5BVL',
+			'product' => '中国特种部队',
+			'order_time' => date('Y-m-d', time()),
+			'amount' => '459.00',
+		]);
+	}
 
     public function actionCalendarList() {
         return 'ok';
-    }
-
-    // flash?pageSize=10&pageNum=1&lang=zh_CN
-    public function actionFlash() {
-//        $t = strtotime('Apr 10, 2017 12:04:14 AM');
-//        var_dump(date('Y-m-d H:i:s', $t)); die();
-//        date("F j,Y,g:i a);
-
-        $pageNum = Yii::$app->request->get('pageNum', 1);
-        $pageSize = Yii::$app->request->get('pageSize', 20);
-        $lang = Yii::$app->request->get('lang', 'en');
-
-        var_dump($lang);
-        var_dump($pageNum);
-        var_dump($pageSize);
-
-        $list = WpfxNewsFlash::find()
-            ->where(['lang' => $lang])
-            ->orderBy(['timestamp' => SORT_DESC])
-            ->offset(($pageNum - 1) * $pageSize)
-            ->limit($pageSize)
-            ->all();
-
-        $result = [];
-        foreach ($list as $item) {
-            $result[] = date('Y-m-d H:i:s', $item['timestamp']);
-            $result[] = $item['title'];
-        }
-
-        return json_encode($result);
-    }
-
-    public function actionCalendar() {
-        $lang = Yii::$app->request->get('lang', 'en');
-        $time = Yii::$app->request->get('time', 0);
-
-        $oneDay = 86400;
-        $bWeek = false; // 是不是取一周的数据
-        $now = time();
-        $start_time = mktime(0,0,0,date("m",$now),date("d",$now),date("Y",$now));  //当天开始时间
-        $end_time = mktime(23,59,59,date("m",$now),date("d",$now),date("Y",$now)); //当天结束时间
-        if ($time == 0) { // 今天
-        } elseif ($time == -1) { // 昨天
-            $start_time = $start_time - $oneDay;
-            $end_time = $end_time - $oneDay;
-        } elseif ($time == 1) { // 明天
-            $start_time = $start_time + $oneDay;
-            $end_time = $end_time + $oneDay;
-        } elseif ($time == 2) { // 本周
-            $w = date('w', $now);
-            $w = ($w + 6) % 7; // [1,2,3,4,5,6,0] => [0,1,2,3,4,5,6]
-            $start_time = $start_time - ($oneDay * $w);
-            $end_time = $end_time + $oneDay * $w;
-            $bWeek = true;
-        } elseif ($time == 3) { // 下周
-            $w = date('w', $now);
-            $w = ($w + 6) % 7; // [1,2,3,4,5,6,0] => [0,1,2,3,4,5,6]
-            $start_time = $start_time - ($oneDay * ($w+7));
-            $end_time = $end_time + ($oneDay * ($w+7));
-            $bWeek = true;
-        }
-
-        if ($bWeek) {
-            $list = [];
-            for($i = 1; $i <= 7; $i++) {
-                $start = $start_time + $i * $oneDay; // 第 i 天 开始
-                $end = $start + $oneDay - 1; // 第 i 天 结束
-                $dayList = WpfxFinancialCalendar::find()
-                    ->where(['lang' => $lang])
-                    ->orderBy(['timestamp' => SORT_DESC])
-                    ->andWhere(['>', 'timestamp', $start])
-                    ->andWhere(['<', 'timestamp', $end])
-                    ->all();
-
-                $list[$i] = $dayList;
-            }
-        } else {
-            $list = WpfxFinancialCalendar::find()
-                ->where(['lang' => $lang])
-                ->orderBy(['timestamp' => SORT_DESC])
-                ->andWhere(['>', 'timestamp', $start_time])
-                ->andWhere(['<', 'timestamp', $end_time])
-                ->all();
-
-        }
-
-        $result = [];
-        foreach ($list as $item) {
-            $result[] = $item['event_id'];
-        }
-
-        return json_encode($result);
-
-    }
-
-    public function actionCalendarDetail() {
-        $lang = Yii::$app->request->get('lang', 'en');
-        $id = Yii::$app->request->get('id', 0);
-
-        $item = WpfxFinancialCalendar::findOne(['lang' => $lang, 'event_id' => $id]);
-        $history = WpfxFcHistory::findOne(['event_id' => $id]);
-
-        return $history->event_id;
     }
 
     public function behaviorTest() {
@@ -248,90 +272,6 @@ class TestController extends Controller
         return false; // 默认不是禁用邮箱
     }
 
-    public function tradeAccount() {
-        $account = TradeAccount::findOne(['login' => 681914130]);
-        $account->balance = 600;
-        var_dump('1');
-        print_r("\n");
-        var_dump($account->products);
-        print_r("\n");
-        $account->save(false);
-        var_dump('2');
-        print_r("\n");
-        var_dump($account->products);
-        print_r("\n");
-        $account->score = 1.23;
-        $account->save(false);
-        var_dump('3');
-        print_r("\n");
-        var_dump($account->products);
-        print_r("\n");
-    }
-
-    /**
-     * @param string $data
-     * @return array|bool
-     */
-    private function recoverData($data)
-    {
-        // 异步
-//        [
-//            'Sign' => '64b62fa9cc515cb6243cab307376a05f1fac1e8b70cdddc22e4a1f278e66feb480df92ffe7c3f1b788be380ccfa7c12b5a1a5e12540f6b398bb29294bd17b98b',
-//            'Data' => 'cU%CLiczM@ITN@cTMggjMtgDMtgTM*IjI@ISZtlGVyVGZy9kIsISWONkI@ISej5WZy%XdD%XZk%3Ti*iI*AjUTV0wDV1UiojIzVHdhR3Ui*iIzE2YiZzM5wmMmdjNtYTMi%WLyETZ00yYmFGNtczM5UGOxkDOiojIv5UZkFmLxIiOiwnb19WbB%XZk%3Ti*iINhjM6%TUNxkM4ckNMVkVK%iOi,mTyVGZy9kIsISNE1kI@ISZ*lHVudW6T%yeyJ9',
-//        ]
-
-        // 同步
-//        [
-//            'Sign' => 'a9c531ef781b4b58ce2a41f39fe4883c910e67c1a48a2ad2a085783073dab39093aa24704f537d2dc509c0ac5a0662db2489a667b9b2867f88acfdf0a8300ac6',
-//            'Data' => 'gU2c1BCdv5GIvRkI@IyZz1EczVmUi*iIn5W6k5WZw%iOiMXd0FGdT%CLxojI05Wdv1WwyVGZy9kIsIST4IjWyEVTM%DOHZDTFZlSiojIv5kclRmcP%yeIucmbpN3clN2byBHIhRXYkBicvZGIzt2Yh%GbsF2YgMXdv52byh2Yul3cn0=',
-//        ],
-        if (!is_string($data)) return false;
-        $data_str = preg_replace('/\s/', '', $data);
-        if ($data_str != $data) return false;
-
-        $suffix = substr($data_str, strlen($data_str) - 3, 3);
-        $data_str = substr($data_str, 0, strlen($data_str) - 3);
-        // reverse
-        if (strlen($data_str) % 3 == 1) {
-            $substr_len = (int) floor(strlen($data_str) / 3);
-            $data_str_sub1 = substr($data_str, 0, $substr_len);
-            $data_str_sub2 = substr($data_str, $substr_len, $substr_len);
-            $data_str_sub3 = substr($data_str, $substr_len * 2, $substr_len + 1);
-            $data_str = $data_str_sub2 . $data_str_sub1 . $data_str_sub3;
-        }
-        else if (strlen($data_str) % 3 == 2) {
-            $substr_len = (int) floor(strlen($data_str) / 3);
-            $data_str_sub1 = substr($data_str, 0, $substr_len + 2);
-            $data_str_sub2 = substr($data_str, $substr_len + 2, $substr_len);
-            $data_str_sub3 = substr($data_str, $substr_len * 2 + 2, $substr_len);
-            $data_str = $data_str_sub3 . $data_str_sub1 . $data_str_sub2;
-        }
-        else {
-            $substr_len = (int) floor(strlen($data_str) / 3);
-            $data_str_sub1 = substr($data_str, 0, $substr_len);
-            $data_str_sub2 = substr($data_str, $substr_len, $substr_len);
-            $data_str_sub3 = substr($data_str, $substr_len * 2, $substr_len);
-            $data_str = $data_str_sub2 . $data_str_sub3 . $data_str_sub1;
-        }
-        $data_str = strrev($data_str);
-        // replace
-        $data_str = str_replace('6', 'a', $data_str);
-        $data_str = str_replace('w', 'Q', $data_str);
-        $data_str = str_replace('%', 'J', $data_str);
-        $data_str = str_replace('*', 'w', $data_str);
-        $data_str = str_replace('@', '6', $data_str);
-        $data_str = str_replace(',', '8', $data_str);
-
-        $data_str = $data_str . $suffix;
-        $data_str = base64_decode($data_str);
-
-        if (!$data_str) return false;
-        $data_array = json_decode($data_str, true);
-        if (!is_array($data_array)) return false;
-
-        return $data_array;
-    }
-
     public function signParams($params) {
         ksort($params);
         $keys_str = implode('%#', array_keys($params));
@@ -339,4 +279,33 @@ class TestController extends Controller
         $str_to_sign = $keys_str . $values_str . '136ddeab162b23a810d8774088e1aa6baf880b65';
         return hash_hmac('sha512', $str_to_sign, 'cEFGh71Mno6RsStTvw7z');
     }
+
+    public function andTest() {
+        $a = 1;
+        $b = 1 << 1;
+        $c = 1 << 2;
+
+        $ret = $a | $b | $c;
+
+        $ret = $ret & ~$a;
+        var_dump($a, $b, $c, ~$b, ~$a, $ret); die();
+    }
+
+    public function curlFile($url, $path)
+	{
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_SAFE_UPLOAD, true);
+
+		$data = array('file' => new \CURLFile(realpath($path)));
+
+		curl_setopt($curl, CURLOPT_URL, $url);
+		curl_setopt($curl, CURLOPT_POST, 1 );
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($curl, CURLOPT_USERAGENT,"TEST");
+		$result = curl_exec($curl);
+		$error = curl_error($curl);
+
+		return $result;
+	}
 }

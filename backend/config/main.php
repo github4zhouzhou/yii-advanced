@@ -38,10 +38,18 @@ return [
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
-                [
+                'error' => [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                 ],
+				'test' => [
+					'class' => 'yii\log\FileTarget',
+					'logVars' => [],
+					'categories' => ['sa'],
+					'maxFileSize' => 4096,
+					'maxLogFiles' => 10,
+					'logFile' => '@backend/runtime/logs/sa.log',
+				],
             ],
         ],
         'errorHandler' => [

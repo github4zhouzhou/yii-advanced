@@ -81,6 +81,55 @@ class Video extends \yii\db\ActiveRecord
         '04012900' => '上海银行',     // '上海银行',
     ];
 
+    public static $country_list = [
+    	'0' => 'Please select your country',
+    	'AR' => 'Argentina',
+		'BR' => 'Brazil'
+	];
+
+    public static $country_bank_list = [
+    	'AR' => [
+    		[
+    			'code' => 'SI',
+				'desc' => 'Santander Rio',
+				'payment_type' => 'Bank Transfer Offline',
+				'logo' => 'https://pay.dlocal.com/views/2.0/images/payments/SI.png'
+			],
+			[
+				'code' => 'PF',
+				'desc' => 'Pago Fácil',
+				'payment_type' => 'Cash Payment',
+				'logo' => 'https://pay.dlocal.com/views/2.0/images/payments/PF.png'
+			],
+			[
+				'code' => 'RP',
+				'desc' => 'Rapi Pago',
+				'payment_type' => 'Cash Payment',
+				'logo' => 'https://pay.dlocal.com/views/2.0/images/payments/RP.png'
+			],
+			[
+				'code' => 'VI',
+				'desc' => 'Visa',
+				'payment_type' => 'Credit Card',
+				'logo' => 'https://pay.dlocal.com/views/2.0/images/payments/VI.png'
+			],
+		],
+		'BR' => [
+			[
+				'code' => 'BL',
+				'desc' => 'Boleto',
+				'payment_type' => 'Cash Payment',
+				'logo' => 'https://pay.dlocal.com/views/2.0/images/payments/BL.png'
+			],
+			[
+				'code' => 'I',
+				'desc' => 'Itau',
+				'payment_type' => 'Bank Transfer Online',
+				'logo' => 'https://pay.dlocal.com/views/2.0/images/payments/I.png'
+			],
+		],
+	];
+
     /**
      * @inheritdoc
      */
