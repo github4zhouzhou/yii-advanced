@@ -40,8 +40,27 @@ use yii\base\Exception;
 class TestController extends Controller
 {
     public function actionIndex() {
-    	return $this->testTry();
+    	try {
+			$this->testTry();
+		} catch (Exception $exception) {
+    		print_r('out catch');
+		}
+
     }
+
+    public function isDst()
+	{
+		$timezone=date('e');  //获取当前使用的时区
+
+//		date_default_timezone_set('US/Pacific-New'); //强制设置时区
+		date_default_timezone_set('America/New_York'); //强制设置时区
+
+		$dst=date('I');  //判断是否夏令时
+
+		date_default_timezone_set($timezone);  //还原时区
+
+		return $dst;  //返回结果
+	}
 
     private function testTry() {
 		$i = 0;
@@ -50,13 +69,12 @@ class TestController extends Controller
 		try {
 			$i= $i+1;
 			throw new Exception('OK');
-			return $i;
 		} catch (Exception $e) {
 			echo "wc";
 			throw $e;
 		} finally {
-			$i= $i+2;
-			print_r($i);
+			print_r('finally');
+			return '1111';
 //			return "1111";//当finally有return的时候 返回这个，当注销后，返回try 或者是 catch的内容。
 		}
 	}
