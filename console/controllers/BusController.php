@@ -68,9 +68,9 @@ class BusController extends Controller
 				$this->stdout(strlen('123测试') . PHP_EOL);
 
 
-				$start = 135 + strlen($routeName) * 2;
+				$start = 133 + strlen($routeName) * 2;
 				$editor->text($mainImg,$routeName,18,$start,355, new Color("#000000"), '/usr/share/fonts/msyh.ttf');
-				$editor->text($mainImg,'车辆信息：' . $plateNumber,12, 490,383, new Color("#ffffff"), '/usr/share/fonts/msyh.ttf');
+				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, new Color("#00ffffff"), '/usr/share/fonts/msyh.ttf');
 				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 90, 117);
 
 
