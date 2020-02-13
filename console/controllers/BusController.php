@@ -20,6 +20,8 @@ class BusController extends Controller
 		$client = new Client();
 		$editor = Grafika::createEditor();
 
+		$editor->open($mainImg,  $imagePath);
+
 		$cvs_file = fopen($csvPath,'r'); //开始读取csv文件数据
 		$i = 0;//记录cvs的行
 		while ($file_data = fgetcsv($cvs_file))
@@ -61,22 +63,20 @@ class BusController extends Controller
 				}
 
 				//打开主图和子图
-				$editor->open($mainImg,  $imagePath);
 				$editor->open($markImg,  $savePath);
 				$editor->resizeFit($markImg , 219 , 219);
 
-				$this->stdout(strlen('123测试') . PHP_EOL);
-
 
 				$start = 133 + strlen($routeName) * 2;
-				$editor->text($mainImg,$routeName,18,$start,355, new Color("#000000"), '/usr/share/fonts/msyh.ttf');
-				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, new Color("#ffffff"), '/usr/share/fonts/msyh.ttf');
 				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 90, 117);
+
+//				$editor->text($mainImg,$routeName,18,$start,355, new Color("#000000"), '/usr/share/fonts/msyh.ttf');
+				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, new Color("#ffffff"), '/usr/share/fonts/msyh.ttf');
 
 
 				try {
-					//$mainSavePath = $destDir . '/' . $mainName;
-					//$editor->save($mainImg, $mainSavePath);
+//					$mainSavePath = $destDir . '/' . $mainName;
+//					$editor->save($mainImg, $mainSavePath);
 					$md5MainSavePath = $destDir . '/' . $md5MainName;
 					$editor->save($mainImg, $md5MainSavePath);
 				} catch (\Exception $exception) {
