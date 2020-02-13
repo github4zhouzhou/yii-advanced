@@ -65,20 +65,20 @@ class BusController extends Controller
 
 				$editor->open($mainImg,  $imagePath);
 				$editor->open($markImg,  $qrSavePath);
-				$editor->resizeFit($markImg , 280 , 280);
+				$editor->resizeFit($markImg , 630 , 630);
 
 
-				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 110, 145);
+				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 248, 325);
 
-				$start = 260 - strlen($routeName) * 3;
-
-
-				$start2 = 735;
+				$newRounteName = $routeName . '路';
+				$routeStart = 585 - strlen($newRounteName) * 5;
+				$newPlateNumber = '车辆信息：' . $plateNumber;
+				$plateStart = 1653 -  strlen($newPlateNumber) * 4;
 
 				$color = new Color("#ffffff");
 				$color->setAlpha(0.5);
-				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490, 383, $color, '/usr/share/fonts/msyh.ttf');
-				$editor->text($mainImg, $routeName . '路',18,$start,515, new Color("#3B4257"), '/usr/share/fonts/msyh.ttf');
+				$editor->text($mainImg, $newPlateNumber, 22, $plateStart, 860, $color, '/usr/share/fonts/msyh.ttf');
+				$editor->text($mainImg, $newRounteName, 40, $routeStart, 1160, new Color("#3B4257"), '/usr/share/fonts/msyh.ttf');
 
 
 				try {
