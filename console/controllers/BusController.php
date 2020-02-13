@@ -13,7 +13,8 @@ class BusController extends Controller
 	// /usr/bin/php /workspace/wwwroot/forex/backend/yii qr-image
 	public function actionQrImage()
 	{
-		$destDir = '/data/cdn/bus';
+		$distDir = '/data/cdn/bus-dist';
+		$busDir = '/data/cdn/bus';
 		$imagePath = '/data/cdn/bus/main.jpg';
 		$csvPath = "/data/cdn/bus_schedules.csv";
 
@@ -42,11 +43,10 @@ class BusController extends Controller
 				$qrName = $id . '-' . 'qr-' . $baseName . '.png';
 				$mainName = $id . '-' . $baseName . '.jpg';
 				$md5MainName = $id . '-' . md5($baseName) . '.jpg';
-				$this->stdout($md5MainName . PHP_EOL);
 				$this->stdout($routeName . PHP_EOL);
 
 
-				$savePath = $destDir . '/' . $qrName;
+				$qrSavePath = $busDir . '/' . $qrName;
 
 				$response = $client->createRequest()
 					->setMethod('POST')
@@ -57,8 +57,7 @@ class BusController extends Controller
 
 				$data = $response->getContent();
 
-				if (file_put_contents($savePath, $data)) {
-					$this->stdout('OK' . PHP_EOL);
+				if (file_put_contents($qrSavePath, $data)) {
 				}
 
 				//打开主图和子图
@@ -69,23 +68,23 @@ class BusController extends Controller
 				$editor->resizeFit($markImg , 219 , 219);
 
 
-				$start = 180 - strlen($routeName) * 2;
+				$start = 178 - strlen($routeName) * 2;
 				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 90, 117);
 
 				$color = new Color("#ffffff");
 				$color->setAlpha(0.5);
-				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, $color, '/usr/share/fonts/msyh.ttf');
-				$editor->text($mainImg,$routeName,18,$start,355, new Color("#3B4257"), '/usr/share/fonts/msyh.ttf');
+				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490, 383, $color, '/usr/share/fonts/msyh.ttf');
+				$editor->text($mainImg, $routeName . '路',18,$start,355, new Color("#3B4257"), '/usr/share/fonts/msyh.ttf');
 
 
 				try {
-					$mainSavePath = $destDir . '/' . $mainName;
+					$mainSavePath = $distDir . '/' . $mainName;
 					$editor->save($mainImg, $mainSavePath);
 				} catch (\Exception $exception) {
 					return '';
 				}
 
-				if ($stop > 10) break;
+				if ($stop > 20) break;
 
 			}
 
