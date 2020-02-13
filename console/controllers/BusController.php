@@ -5,6 +5,8 @@ namespace console\controllers;
 
 use yii\console\Controller;
 use yii\httpclient\Client;
+use yii\base\Exception;
+use yii\db\Query;
 use Grafika\Grafika;
 use Grafika\Color;
 
