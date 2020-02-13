@@ -62,12 +62,14 @@ class BusController extends Controller
 				$response = $client->createRequest()
 					->setMethod('POST')
 					->setFormat(Client::FORMAT_JSON)
-					->setUrl("http://127.0.0.1:4633/1/qr")
-					->setData([
-						'plate_number' => $plateNumber,
-						'route_name' => $routeName,
-						'page' => 'pages/auth/index',
-					])
+					->setUrl("https://ncp.zmxyk.com/1/qr")
+					->setData(['plate_number' => $plateNumber, 'route_name' => $routeName])
+//					->setUrl("http://127.0.0.1:4633/1/qr")
+//					->setData([
+//						'plate_number' => $plateNumber,
+//						'route_name' => $routeName,
+//						'page' => 'pages/auth/index',
+//					])
 					->send();
 				$data = $response->getContent();
 				file_put_contents($qrSavePath, $data);
