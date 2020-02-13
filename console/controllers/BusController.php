@@ -64,7 +64,7 @@ class BusController extends Controller
 				$editor = Grafika::createEditor();
 
 				$editor->open($mainImg,  $imagePath);
-				$editor->open($markImg,  $savePath);
+				$editor->open($markImg,  $qrSavePath);
 				$editor->resizeFit($markImg , 219 , 219);
 
 
