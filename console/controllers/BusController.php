@@ -94,6 +94,9 @@ class BusController extends Controller
 			// 计算线路文字的位置
 			$routeLeft = 520;
 			$newRounteName = $routeName . ' 路';
+			if (6 == $companyId) {
+				$newRounteName = $routeName;
+			}
 			$routeLen = strlen($newRounteName);
 			if ($routeLen > 5) {
 				$routeStart = $routeLeft - strlen($newRounteName) * 5;
