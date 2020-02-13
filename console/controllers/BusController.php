@@ -12,10 +12,10 @@ class BusController extends Controller
 {
 
 	// /usr/bin/php /workspace/wwwroot/forex/backend/yii qr-image
-	public function actionMergeQrImage($page = 0, $size = 20)
-	{
-		$distDir = '/data/cdn/bus-dist';
-	}
+//	public function actionMergeQrImage($page = 0, $size = 20)
+//	{
+//		$distDir = '/data/cdn/bus-dist';
+//	}
 
 	// /usr/bin/php /workspace/wwwroot/forex/backend/yii qr-image
 	public function actionQrImage()
