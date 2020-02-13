@@ -17,9 +17,11 @@ use common\models\WpfxFinancialCalendar;
 use common\models\WpfxNewsFlash;
 use mdm\admin\components\MenuHelper;
 use PHPHtmlParser\Dom;
+use Symfony\Component\BrowserKit\Client;
 use Yii;
 use yii\base\Controller;
 use yii\base\Exception;
+use GuzzleHttp\RequestOptions;
 
 /*
  *               (dev) /--j-------l--\
@@ -40,13 +42,105 @@ use yii\base\Exception;
 class TestController extends Controller
 {
     public function actionIndex() {
-    	try {
-			$this->testTry();
-		} catch (Exception $exception) {
-    		print_r('out catch');
-		}
-
+    	$res = json_decode('good', true);
+    	return $res;
     }
+
+	function getUtcHour($timestamp)
+	{
+		$tz = date_default_timezone_get();
+		date_default_timezone_set('UTC');
+		$H = date('H', $timestamp);
+		date_default_timezone_set($tz);
+		return intval($H);
+	}
+
+	/**
+	 * @desc 连接苹果的推送服务器
+	 * @return bool|resource
+	 */
+	function connect_feedback() {
+
+		$passphrase = '123456';
+
+		$cert_file = '/Users/zhouzhou/Downloads/tmp/output_dis.pem'; // 推送的证书地址，环境不要错了
+
+		$feedback_server = 'ssl://feedback.push.apple.com:2196'; // feedback服务器地址
+
+		$ctx = stream_context_create();
+
+		stream_context_set_option($ctx, 'ssl', 'local_cert', $cert_file);
+
+		stream_context_set_option($ctx, 'ssl', 'passphrase', $passphrase);
+
+		$fp = stream_socket_client($feedback_server, $error, $errorString, 60, STREAM_CLIENT_CONNECT, $ctx);
+
+		if(!$fp) {
+			Yii::error("Failed to connect feedback server: $error $errorString\n", __METHOD__);
+			return false;
+		} else {
+			Yii::error("Connection to feedback server OK\n", __METHOD__);
+		}
+		return $fp;
+	}
+
+	/**
+	 * @desc 执行推送操作的主要代码
+	 */
+	function feedback(){
+
+		$count1 = 0;
+
+		$run_times = 0;
+
+		$iostokenremoved= 'iostokenremoved';
+
+		$iostokenremoved_num = 'iostokenremoved_num';
+
+		$fp = $this->connect_feedback();
+
+		//苹果建议provider和feedback服务维持一个长连接，如果频繁的建立连接可能会被当做攻击处理
+		$devcon ='';
+
+		while($run_times < 2000){
+
+			$run_times++;
+
+			// socket连接检测
+			if($devcon === FALSE) {
+				Yii::error(date('Ymd His').'|feedback server disconnected', __METHOD__);
+				@fclose($fp);
+				unset($fp);
+				$fp = $this->connect_feedback();
+			}
+
+			//每次读取38个字段，这是保存的一个完整token 信息的长度
+			while ($devcon = fread($fp, 38)){
+				$count1++;
+
+				$arr = unpack("H*", $devcon);//解包传过来的二进制数据
+
+				$rawhex = trim(implode("", $arr));
+
+				$feedbackTime = hexdec(substr($rawhex, 0, 8));
+
+				$feedbackDate = date('Y-m-d H:i:s', $feedbackTime);
+
+				$feedbackDeviceToken = substr($rawhex, 12, 64);
+
+				Yii::error('date:' . $feedbackDate, __METHOD__);
+				Yii::error('token:' . $feedbackDeviceToken, __METHOD__);
+			}
+
+			Yii::error('FeedBack:'. $count1 . PHP_EOL, __METHOD__);
+
+//			usleep(10000000); // sleep 10秒
+			fclose($fp);
+			break;
+
+		}
+//		fclose($fp);
+	}
 
     public function isDst()
 	{
@@ -63,18 +157,13 @@ class TestController extends Controller
 	}
 
     private function testTry() {
-		$i = 0;
-
 		Yii::error(__METHOD__, 'sa');
 		try {
-			$i= $i+1;
-			throw new Exception('OK');
-		} catch (Exception $e) {
-			echo "wc";
-			throw $e;
+			return "1";
+//			throw new Exception('OK');
 		} finally {
 			print_r('finally');
-			return '1111';
+//			return '1111';
 //			return "1111";//当finally有return的时候 返回这个，当注销后，返回try 或者是 catch的内容。
 		}
 	}
@@ -325,5 +414,57 @@ class TestController extends Controller
 		$error = curl_error($curl);
 
 		return $result;
+	}
+
+	public function getDeviceLangByMid($mid)
+	{
+		$response = $this->curlGet('http://172.24.47.98:9415/api/' . 'device/info', [
+			'alias' => $mid,
+			'app_id' => 5,
+		]);
+		return $response;
+	}
+
+	public function curlGet($url, $params, $headers = [])
+	{
+		$ch = curl_init();
+
+		/**
+		 * http 1.0 和 1.1 的区别
+		 * https://www.cnblogs.com/gofighting/p/5421890.html
+		 * http 1.1 可能会保持长连接，我们不需要长连接，所以强制使用1.0
+		 */
+		curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+
+		// 在发起连接前等待的时间，如果设置为0，则无限等待。
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+		// 设置cURL允许执行的最长秒数
+		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+		// 将curl_exec()获取的信息以文件流的形式返回，而不是直接输出。
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		// http://stackoverflow.com/questions/4372710/php-curl-https
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+
+		if (empty($params)) {
+			curl_setopt($ch, CURLOPT_URL, $url);
+		} else {
+			if (is_array($params)) {
+				curl_setopt($ch, CURLOPT_URL, $url . '?' . http_build_query($params));
+			} else {
+				curl_setopt($ch, CURLOPT_URL, $url . '?' . $params);
+			}
+		}
+
+		// 设置头信息
+		if (empty($headers)) {
+			curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json;charset=utf-8']);
+		} else {
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		}
+
+		// 执行
+		$response = curl_exec($ch);
+		curl_close($ch);
+		return $response;
 	}
 }

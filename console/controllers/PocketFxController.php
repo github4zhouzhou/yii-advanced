@@ -21,8 +21,12 @@ class PocketFxController extends Controller
     //public static $calendar_history_url = 'http://news.wattforex.com/v1/getIndex?id=';
 
 	// /usr/bin/php /Users/zhouzhou/workspace/2018/advanced/yii pocket-fx/test
-    public function actionTest($id) {
-		return 'OK';
+    public function actionTest() {
+		$res = json_decode('good', true);
+		if (empty($res)) {
+			$this->stdLog('res:empty');
+		}
+		$this->stdLog('res:'.$res);
     }
 
     public function actionFlashAll() {
@@ -117,7 +121,7 @@ class PocketFxController extends Controller
 			'jsonStr' => [
 				'wheres' => ['MaxTime' => 0]
 			],
-			'limit' => '50',
+			'limit' => '100',
 		];
 		$this->stdLog($urls[$r]);
 		$headers = array(
@@ -133,10 +137,11 @@ class PocketFxController extends Controller
 		}
 
 		foreach ($list['data'] as $item) {
-			$this->stdLog($item['id']);
 			$this->stdLog($item['content']);
-			$this->stdLog($item['timestr']);
-			$this->stdLog(strtotime($item['timestr']));
+			$this->stdLog(json_encode($item));
+//			$this->stdLog($item['id']);
+//			$this->stdLog($item['timestr']);
+//			$this->stdLog(strtotime($item['timestr']));
 		}
 	}
 
@@ -712,6 +717,117 @@ class PocketFxController extends Controller
         }
     }
 
+	public function actionStrategyNew() {
+		$symbolKeys = [
+			'AUDUSD' => '01de5d2c3b9b1ff6aa50ac3c2337064e',
+			'AUDCAD' => 'eee470fd00fae2fdf1c8135c376b384b',
+			'AUDJPY' => '45fab9871942ea477bb0e11615bdf4b6',
+			'AUDCHF' => 'edb204db5f56b3c8cb5f76671de67d6d',
+			'AUDNZD' => '6475e4ea9353d7b37506182da811ffc3',
+			'CADJPY' => '786f97b5818f9c79fe74d9c5fedeeb5b',
+			'CADCHF' => '80763a6e9b9e644af44700bb37380700',
+			'USDCAD' => '1f0cd9ce3ce989fd8e73e4d79e484e8f',
+			'USDCNH' => 'faadc8a5b63ac55851d7cfeb7828cd6f',
+			'USDJPY' => 'eec5396b2eca3cdd49c4c53a9f0b205e',
+			'USDCHF' => 'cede9fd1d6f61bb6c205f96c9773473e',
+			'EURAUD' => '1261a69cb3944b130b2e25af33ebc609',
+			'EURCAD' => '0a8a1c21c6618d540870777cff1f50d0',
+			'EURUSD' => '7945652a70e9b13d7ba6c2c521ab58a7',
+			'EURJPY' => 'eca2ac0b96575fa0bc5f4587ce5601b2',
+			'EURCHF' => '567276ac6fed19b356af22adcf25b1dd',
+			'EURNZD' => '029d98fc06b7efd5cc16d5769c0f21ed',
+			'EURGBP' => '10f560bebddcc14405c0b36efed54ffb',
+			'CHFJPY' => 'dfa04e1fcf0ee06854230d0dd8d37a46',
+			'NZDCAD' => 'fb84c77f259b8a6305ffb8ebc670857d',
+			'NZDUSD' => '18ebb56c5e16121f3c1e3c48dfdb9edf',
+			'NZDJPY' => '13200adf628f74182f3c29794e7fcd77',
+			'NZDCHF' => '25d866499bda7bf501062ec7d4b227f2',
+			'GBPAUD' => 'fcbe018a14817ad0df816f28a855093f',
+			'GBPCAD' => '9526d944037c1dee899be93f798fda61',
+			'GBPUSD' => '23ca99be483960394a03c1c2be30d102',
+			'GBPJPY' => '01a153b9583a1732613c1f0e31cac483',
+			'GBPCHF' => '257e95b0a47c8eb26891a32848c6a074',
+			'GBPNZD' => '1476df9bee71ee22dad768d2c72c4301',
+
+			'XAGUSD' => 'f2715ca65b788bb1a923c4eaa4052ff6',
+			'XAUUSD' => '6cadc517fc27792c00eec6666c0f75d5',
+			'XBRUSD' => 'ee8c12351b91f4c8bcd6d57d8bb9df40',
+			'XNGUSD' => '0e048a0e1d67eee0c244e2317741ddff',
+			'XTIUSD' => 'c384821af9492119d785ebf29735ac87',
+
+			'USA500' => '5c5627bbc1aab43e4ff625a43e15194b',
+			'US30' => '50d8ec2a9db0055a020692218e0c338d',
+			'GER30' => 'cdf26e0fbf97d27e07f010e9f54b3141',
+			'HK50' => '4c7e03d40b0441025bcecde14e19e1c8',
+			'NAS100' => 'd3877d7a2ae7920d5061778157c96ea2',
+			'EUSTX50' => 'b0c4585d068ddd9f09e2a54b50fa8c56',
+			'JPN225' => '5c4b361dbda69e26c4b663e0cd4b15c9',
+
+		];
+		$url = "https://23b7ae.pathx.ucloudgda.com/api/app/v3/symbol/strategy?user_id=1309953&uuid=7301B9A5-684B-4C35-8AF0-60A52FD7E716&os=iOS&version=4.7.0&lang=cn&world_code=CN&symbol=";
+
+		foreach ($symbolKeys as $symbol => $md5) {
+			$result = $this->dataCurl($url . $symbol);
+
+			$data = json_decode($result, true);
+			if (isset($data['is_succ'])) {
+				$todayS = $data['data'][0];
+				$result = [
+					'lang' => 'zh_CN',
+					'symbol' => $todayS['symbol'],
+					'name' => $todayS['symbol'],
+					'publishTime' => ($todayS['updated_at'] * 1000),
+					'author' => "TC",
+					'last' => $todayS['pivot'],
+					'pivot' => $todayS['pivot'],
+					'title' => $todayS['name'],
+					'summary' => '',
+					'pivotText' => $todayS['pivot_desc'],
+					'strategyText' => $todayS['trade_strategy'],
+					'standbyStrategyText' => $todayS['alt_strategy'],
+					'techText' => $todayS['tech_review']
+				];
+
+				$i = 1;
+				foreach ($todayS['resistance'] as $resistance) {
+					$result['resistance' . $i] = $resistance;
+				}
+				$j = 1;
+				foreach ($todayS['support'] as $support) {
+					$result['support' . $j] = $support;
+				}
+
+				$newStrategy = [
+					'result' => $result,
+					"code" =>  "success",
+    				"isSuccess" => true,
+				];
+				print_r($newStrategy);
+
+//        "author": "TC",
+//        "last": "1.7394",
+//        "pivot": "1.7349",
+//        "resistance1": "1.7468",
+//        "resistance2": "1.7501",
+//        "resistance3": "1.7534",
+//        "support1": "1.7349",
+//        "support2": "1.7293",
+//        "support3": "1.726",
+//				"title": "EUR/NZD \xe5\xbd\x93\xe6\x97\xa5\xe5\x86\x85: \xe7\x9c\x8b\xe6\xb6\xa8\xef\xbc\x8c\xe5\xbd\x93 1.7349 \xe4\xb8\xba\xe6\x94\xaf\xe6\x92\x91\xe4\xbd\x8d\xe3\x80\x82",
+//        "summary": "\xe7\x9c\x8b\xe6\xb6\xa8\xef\xbc\x8c\xe5\xbd\x93 1.7349 \xe4\xb8\xba\xe6\x94\xaf\xe6\x92\x91\xe4\xbd\x8d\xe3\x80\x82",
+//        "pivotText": "1.7349 \xe4\xbd\x9c\xe4\xb8\xba\xe3\x80\x82",
+//        "strategyText": "\xe7\x9c\x8b\xe6\xb6\xa8\xef\xbc\x8c\xe5\xbd\x93 1.7349 \xe4\xb8\xba\xe6\x94\xaf\xe6\x92\x91\xe4\xbd\x8d\xe3\x80\x82",
+//        "standbyStrategyText": "\xe5\x90\x91\xe4\xb8\x8b\xe8\xb7\x8c\xe7\xa0\xb4 1.7349\xef\xbc\x8c\xe5\xb0\x86\xe5\xb8\xa6\xe6\x9d\xa5\xe7\xbb\xa7\xe7\xbb\xad\xe4\xb8\x8b\xe8\xb7\x8c\xe7\x9a\x84\xe8\xb6\x8b\xe5\x8a\xbf\xef\xbc\x8c\xe7\x9b\xae\xe6\xa0\x87\xe4\xbd\x8d\xe4\xb8\xba 1.7293 \xe7\x84\xb6\xe5\x90\x8e\xe4\xb8\xba1.7260 \xe3\x80\x82",
+//        "techText": "RSI\xe6\x8a\x80\xe6\x9c\xaf\xe6\x8c\x87\xe6\xa0\x87\xe5\xa4\xa7\xe4\xba\x8e\xe4\xb8\xad\xe6\x80\xa7\xe5\x8c\xba\xe5\x9f\x9f50\xe3\x80\x82MACD\xe6\x8a\x80\xe6\x9c\xaf\xe6\x8c\x87\xe6\xa0\x87\xe5\xa4\x84\xe5\x9c\xa8\xe5\x85\xb6\xe4\xbf\xa1\xe5\x8f\xb7\xe7\xba\xbf\xe4\xb9\x8b\xe4\xb8\x8a \xe7\x9c\x8b\xe5\xa4\x9a\xe3\x80\x82\xe6\xad\xa4\xe5\xa4\x96\xef\xbc\x8c\xe4\xbb\xb7\xe4\xbd\x8d\xe5\xa4\x84\xe5\x9c\xa8\xe5\x85\xb620\xe5\xa4\xa9\xe5\x8f\x8a50\xe5\xa4\xa9\xe7\xa7\xbb\xe5\x8a\xa8\xe5\xb9\xb3\xe5\x9d\x87\xe7\xba\xbf\xe4\xb8\x8a\xe6\x96\xb9 ( \xe5\xbd\x93\xe5\x89\x8d\xe6\x98\xaf1.7373 \xe5\x92\x8c 1.7364 )\xe3\x80\x82",
+//				print_r($data);
+			} else {
+				print_r($data);
+			}
+
+			break;
+		}
+    }
+
     public function actionStrategy($en = 0) {
         $symbolKeys = [
             'AUDUSD' => '01de5d2c3b9b1ff6aa50ac3c2337064e',
@@ -936,7 +1052,7 @@ class PocketFxController extends Controller
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // http://stackoverflow.com/questions/4372710/php-curl-https
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
+//		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, true);
         if (!empty($headers)) {
             print_r($headers);
             curl_setopt($ch,CURLOPT_HTTPHEADER, $headers);
