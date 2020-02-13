@@ -70,13 +70,13 @@ class BusController extends Controller
 
 				$start = 133 + strlen($routeName) * 2;
 				$editor->text($mainImg,$routeName,18,$start,355, new Color("#000000"), '/usr/share/fonts/msyh.ttf');
-				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, new Color("#ffffff"), '/usr/share/fonts/dejavu/DejaVuSans.ttf');
+				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, new Color("#ffffff"), '/usr/share/fonts/msyh.ttf');
 				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 90, 117);
 
 
 				try {
-					$mainSavePath = $destDir . '/' . $mainName;
-					$editor->save($mainImg, $mainSavePath);
+					//$mainSavePath = $destDir . '/' . $mainName;
+					//$editor->save($mainImg, $mainSavePath);
 					$md5MainSavePath = $destDir . '/' . $md5MainName;
 					$editor->save($mainImg, $md5MainSavePath);
 				} catch (\Exception $exception) {
