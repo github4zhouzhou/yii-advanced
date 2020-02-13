@@ -28,7 +28,8 @@
         "kartik-v/yii2-widgets": "*",
         "shark/simple_html_dom": "@dev",
         "paquettg/php-html-parser": "^1.7",
-        "kosinix/grafika": "dev-master"
+        "kosinix/grafika": "dev-master",
+        "yiisoft/yii2-httpclient": "^2.0"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",
