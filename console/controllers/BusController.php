@@ -53,7 +53,6 @@ class BusController extends Controller
 			$baseName = $id . '-' . $companyName . '-' . $routeName . '-' . $plateNumber;
 			$qrName = 'qr-' . $baseName . '.png';
 			$mainName = $baseName . '.jpg';
-			$savePath = $busDir . '/' . $qrName;
 
 			// 输出一下文件名
 			$this->stdout($mainName . PHP_EOL);
