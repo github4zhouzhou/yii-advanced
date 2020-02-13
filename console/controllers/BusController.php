@@ -24,8 +24,10 @@ class BusController extends Controller
 
 		$cvs_file = fopen($csvPath,'r'); //开始读取csv文件数据
 		$i = 0;//记录cvs的行
+		$stop = 0;
 		while ($file_data = fgetcsv($cvs_file))
 		{
+			$stop++;
 			$i++;
 			if($i==1)
 			{
@@ -67,7 +69,7 @@ class BusController extends Controller
 				$editor->resizeFit($markImg , 219 , 219);
 
 
-				$start = 133 + strlen($routeName) * 2;
+				$start = 130 + strlen($routeName) * 2;
 				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 90, 117);
 
 				$color = new Color("#ffffff");
@@ -84,7 +86,8 @@ class BusController extends Controller
 				} catch (\Exception $exception) {
 					return '';
 				}
-				break;
+
+				if ($stop > 10) break;
 
 			}
 
