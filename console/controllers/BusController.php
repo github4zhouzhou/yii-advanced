@@ -18,9 +18,6 @@ class BusController extends Controller
 		$csvPath = "/data/cdn/bus_schedules.csv";
 
 		$client = new Client();
-		$editor = Grafika::createEditor();
-
-		$editor->open($mainImg,  $imagePath);
 
 		$cvs_file = fopen($csvPath,'r'); //开始读取csv文件数据
 		$i = 0;//记录cvs的行
@@ -65,6 +62,9 @@ class BusController extends Controller
 				}
 
 				//打开主图和子图
+				$editor = Grafika::createEditor();
+
+				$editor->open($mainImg,  $imagePath);
 				$editor->open($markImg,  $savePath);
 				$editor->resizeFit($markImg , 219 , 219);
 
