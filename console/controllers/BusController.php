@@ -32,12 +32,12 @@ class BusController extends Controller
 		$stop = 0;
 		while ($file_data = fgetcsv($cvs_file))
 		{
-			$stop++;
 			$i++;
 			if($i==1)
 			{
 				continue;//过滤表头
 			}
+			$stop++;
 
 			if($file_data[0]!='')
 			{
@@ -77,7 +77,13 @@ class BusController extends Controller
 				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 260, 335);
 
 				$newRounteName = $routeName . ' 路';
-				$routeStart = 520 - strlen($newRounteName) * 5;
+				$routeLen = strlen($newRounteName);
+				if ($routeLen > 5) {
+					$routeStart = 520 - strlen($newRounteName) * 5;
+				} else {
+					$routeStart = 520 - strlen($newRounteName) * 4;
+				}
+
 				$newPlateNumber = '车辆信息：' . $plateNumber;
 				$plateStart = 1580 -  strlen($newPlateNumber) * 4;
 
