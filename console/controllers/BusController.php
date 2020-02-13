@@ -63,7 +63,7 @@ class BusController extends Controller
 					->setMethod('POST')
 					->setFormat(Client::FORMAT_JSON)
 					->setUrl("https://ncp.zmxyk.com/1/qr")
-					->setData(['plate_number' => $plateNumber, 'route_name' => $routeName])
+					->setData(['plate_number' => $plateNumber, 'route_name' => $routeName, 'page' => 'pages/auth/index'])
 //					->setUrl("http://127.0.0.1:4633/1/qr")
 //					->setData([
 //						'plate_number' => $plateNumber,
