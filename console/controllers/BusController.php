@@ -14,7 +14,7 @@ class BusController extends Controller
 	public function actionQrImage()
 	{
 		$destDir = '/data/cdn/bus';
-		$imagePath = '/data/cdn/bus/main.png';
+		$imagePath = '/data/cdn/bus/main.jpg';
 		$csvPath = "/data/cdn/bus_schedules.csv";
 
 		$client = new Client();
@@ -41,8 +41,8 @@ class BusController extends Controller
 
 				$baseName = $routeName . '-' . $plateNumber;
 				$qrName = $id . '-' . 'qr-' . $baseName . '.png';
-				$mainName = $id . '-' . $baseName . '.png';
-				$md5MainName = $id . '-' . md5($baseName) . '.png';
+				$mainName = $id . '-' . $baseName . '.jpg';
+				$md5MainName = $id . '-' . md5($baseName) . '.jpg';
 				$this->stdout($md5MainName . PHP_EOL);
 				$this->stdout($routeName . PHP_EOL);
 
@@ -73,7 +73,7 @@ class BusController extends Controller
 				$color = new Color("#ffffff");
 				$color->setAlpha(0.5);
 				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, $color, '/usr/share/fonts/msyh.ttf');
-				$editor->text($mainImg,$routeName,18,$start,355, new Color("#000000"), '/usr/share/fonts/msyh.ttf');
+				$editor->text($mainImg,$routeName,18,$start,355, new Color("#3B4257"), '/usr/share/fonts/msyh.ttf');
 
 
 				try {
