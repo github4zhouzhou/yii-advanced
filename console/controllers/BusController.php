@@ -12,7 +12,7 @@ class BusController extends Controller
 {
 
 	// /usr/bin/php /workspace/wwwroot/forex/backend/yii qr-image
-	public function actionMergeQrImage($page = 0, $size = 20, )
+	public function actionMergeQrImage($page = 0, $size = 20)
 	{
 		$distDir = '/data/cdn/bus-dist';
 	}
@@ -50,7 +50,7 @@ class BusController extends Controller
 				$qrName = $id . '-' . 'qr-' . $baseName . '.png';
 				$mainName = $id . '-' . $baseName . '.jpg';
 				$md5MainName = $id . '-' . md5($baseName) . '.jpg';
-				$this->stdout($stop . ' ' . $routeName . PHP_EOL);
+				$this->stdout( $stop . ' ' . $routeName . PHP_EOL);
 
 				$qrSavePath = $busDir . '/' . $qrName;
 
