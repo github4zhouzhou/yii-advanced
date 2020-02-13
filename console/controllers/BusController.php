@@ -33,6 +33,8 @@ class BusController extends Controller
 			$companyMap[$company['id']] = $company;
 		}
 
+		$client = new Client();
+
 		$count = 0;
 		foreach ($busInfoList as $busInfo) {
 			$count++;
