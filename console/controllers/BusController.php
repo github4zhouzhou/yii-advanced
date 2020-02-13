@@ -70,7 +70,9 @@ class BusController extends Controller
 				$start = 133 + strlen($routeName) * 2;
 				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 90, 117);
 
-				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, new Color("#ffffff"), '/usr/share/fonts/msyh.ttf');
+				$color = new Color("#ffffff");
+				$color->setAlpha(0.5);
+				$editor->text($mainImg,'车辆信息：' . $plateNumber, 10, 490,383, $color, '/usr/share/fonts/msyh.ttf');
 				$editor->text($mainImg,$routeName,18,$start,355, new Color("#000000"), '/usr/share/fonts/msyh.ttf');
 
 
