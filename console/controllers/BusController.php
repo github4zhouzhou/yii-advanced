@@ -69,10 +69,8 @@ class BusController extends Controller
 						'page' => 'pages/auth/index',
 					])
 					->send();
-				if ($response && $response->isOK) {
-					$data = $response->getContent();
-					file_put_contents($qrSavePath, $data);
-				}
+				$data = $response->getContent();
+				file_put_contents($qrSavePath, $data);
 			} catch (\Exception $exception) {
 
 			}
