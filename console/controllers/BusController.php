@@ -68,7 +68,7 @@ class BusController extends Controller
 				$editor->resizeFit($markImg , 219 , 219);
 
 
-				$start = 178 - strlen($routeName) * 2;
+				$start = 175 - strlen($routeName) * 2;
 				$editor->blend($mainImg, $markImg, 'normal', 1, 'top-left', 90, 117);
 
 				$color = new Color("#ffffff");
