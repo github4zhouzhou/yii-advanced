@@ -79,10 +79,8 @@ class BusController extends Controller
 
 
 				try {
-//					$mainSavePath = $destDir . '/' . $mainName;
-//					$editor->save($mainImg, $mainSavePath);
-					$md5MainSavePath = $destDir . '/' . $md5MainName;
-					$editor->save($mainImg, $md5MainSavePath);
+					$mainSavePath = $destDir . '/' . $mainName;
+					$editor->save($mainImg, $mainSavePath);
 				} catch (\Exception $exception) {
 					return '';
 				}
